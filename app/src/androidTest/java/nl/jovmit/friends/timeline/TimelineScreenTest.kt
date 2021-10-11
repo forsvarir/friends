@@ -8,9 +8,11 @@ import nl.jovmit.friends.domain.exceptions.ConnectionUnavailableException
 import nl.jovmit.friends.domain.post.InMemoryPostCatalog
 import nl.jovmit.friends.domain.post.Post
 import nl.jovmit.friends.domain.post.PostCatalog
+import nl.jovmit.friends.domain.user.UserCatalog
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
 
@@ -18,6 +20,8 @@ class TimelineScreenTest {
 
   @get:Rule
   val timelineTestRule = createAndroidComposeRule<MainActivity>()
+
+  val defaultPostCatalog : PostCatalog = GlobalContext.get().get()
 
   @Test
   fun showsEmptyTimelineMessage() {
@@ -86,7 +90,7 @@ class TimelineScreenTest {
 
   @After
   fun tearDown() {
-    replacePostCatalogWith(InMemoryPostCatalog())
+    replacePostCatalogWith(defaultPostCatalog)
   }
 
   private fun replacePostCatalogWith(postsCatalog: PostCatalog) {
