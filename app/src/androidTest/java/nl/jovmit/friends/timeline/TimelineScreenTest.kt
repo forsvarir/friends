@@ -3,12 +3,7 @@ package nl.jovmit.friends.timeline
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import kotlinx.coroutines.delay
 import nl.jovmit.friends.MainActivity
-import nl.jovmit.friends.domain.exceptions.BackendException
-import nl.jovmit.friends.domain.exceptions.ConnectionUnavailableException
-import nl.jovmit.friends.domain.post.InMemoryPostCatalog
-import nl.jovmit.friends.domain.post.Post
-import nl.jovmit.friends.domain.post.PostCatalog
-import nl.jovmit.friends.domain.user.UserCatalog
+import nl.jovmit.friends.domain.post.*
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
@@ -101,24 +96,13 @@ class TimelineScreenTest {
   }
 
   class DelayingPostsCatalog : PostCatalog {
+    override suspend fun addPost(userId: String, postText: String): Post {
+      TODO("Not yet implemented")
+    }
 
     override suspend fun postsFor(userIds: List<String>): List<Post> {
       delay(2000)
       return emptyList()
-    }
-  }
-
-  class UnavailablePostCatalog : PostCatalog {
-
-    override suspend fun postsFor(userIds: List<String>): List<Post> {
-      throw BackendException()
-    }
-  }
-
-  class OfflinePostCatalog : PostCatalog {
-
-    override suspend fun postsFor(userIds: List<String>): List<Post> {
-      throw ConnectionUnavailableException()
     }
   }
 }
