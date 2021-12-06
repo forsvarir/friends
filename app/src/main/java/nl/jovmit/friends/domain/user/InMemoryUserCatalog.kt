@@ -3,7 +3,7 @@ package nl.jovmit.friends.domain.user
 import nl.jovmit.friends.domain.exceptions.DuplicateAccountException
 
 class InMemoryUserCatalog(
-  private val emailsToUsers: MutableMap<String, User> = mutableMapOf(),
+  private val usersForPassword: MutableMap<String, MutableList<User>> = mutableMapOf(),
   private val followings: List<Following> = mutableListOf()
 ) : UserCatalog {
 
@@ -15,7 +15,7 @@ class InMemoryUserCatalog(
     checkAccountExists(email)
     val userId = createUserIdFor(email)
     val user = User(userId, email, about)
-    saveUser(user)
+    saveUser(password, user)
     return user
   }
 
@@ -26,7 +26,7 @@ class InMemoryUserCatalog(
   }
 
   private fun checkAccountExists(email: String) {
-    if (emailsToUsers.containsKey(email)) {
+    if (usersForPassword.values.flatten().any { it.email == email }) {
       throw DuplicateAccountException()
     }
   }
@@ -35,7 +35,7 @@ class InMemoryUserCatalog(
     return email.takeWhile { it != '@' } + "Id"
   }
 
-  private fun saveUser(user: User) {
-    emailsToUsers[user.email] = user
+  private fun saveUser(password: String, user: User) {
+    usersForPassword.getOrPut(password, ::mutableListOf).add(user)
   }
 }

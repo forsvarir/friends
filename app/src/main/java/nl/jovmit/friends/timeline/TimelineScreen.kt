@@ -30,15 +30,16 @@ import nl.jovmit.friends.timeline.state.TimelineState
 import nl.jovmit.friends.ui.composables.BlockingLoading
 import nl.jovmit.friends.ui.composables.InfoMessage
 import nl.jovmit.friends.ui.composables.ScreenTitle
-import java.text.SimpleDateFormat
-import java.util.*
+import nl.jovmit.friends.ui.extensions.toDateTime
+import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun TimelineScreen(
   userId: String,
-  timelineViewModel: TimelineViewModel,
   onCreateNewPost: () -> Unit
 ) {
+
+  val timelineViewModel = getViewModel<TimelineViewModel>()
   val screenState by remember { mutableStateOf(TimelineScreenState()) }
   val timelineState by timelineViewModel.timelineState.observeAsState()
   if (screenState.shouldLoadPostsFor(userId)) {
@@ -142,11 +143,6 @@ fun PostItem(
       )
     }
   }
-}
-
-private fun Long.toDateTime(): String {
-  val dateTimeFormat = SimpleDateFormat("dd-MM-yyyy HH:mm", Locale.US)
-  return dateTimeFormat.format(this)
 }
 
 @Preview

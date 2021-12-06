@@ -2,13 +2,13 @@ package nl.jovmit.friends.postcomposer
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import nl.jovmit.friends.MainActivity
-import nl.jovmit.friends.domain.post.InMemoryPostCatalog
-import nl.jovmit.friends.domain.post.PostCatalog
-import nl.jovmit.friends.domain.user.InMemoryUserData
+import nl.jovmit.friends.domain.post.*
+import nl.jovmit.friends.domain.user.UserDataStore
 import nl.jovmit.friends.infrastructure.ControllableClock
 import org.junit.After
 import org.junit.Rule
 import org.junit.Test
+import org.koin.core.context.GlobalContext
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
 import java.util.*
@@ -18,14 +18,13 @@ class CreateNewPostScreenTest {
   @get:Rule
   val createNewPostRule = createAndroidComposeRule<MainActivity>()
 
-  private val timestampWithTimezoneOffset = Calendar.getInstance()
+  private val timestamp = Calendar.getInstance()
     .also { it.set(2021, 9, 30, 15, 30) }
     .timeInMillis
 
   @Test
   fun createNewPost() {
-    replaceUserDataWith(InMemoryUserData("jovmitId"))
-    replacePostCatalogWith(InMemoryPostCatalog(clock = ControllableClock(timestampWithTimezoneOffset)))
+    replacePostCatalogWith(InMemoryPostCatalog(clock = ControllableClock(timestamp)))
 
     launchPostComposerFor("jovmit@friends.com", createNewPostRule) {
       typePost("My New Post")
@@ -37,8 +36,7 @@ class CreateNewPostScreenTest {
 
   @Test
   fun createMultiplePost() {
-    replaceUserDataWith(InMemoryUserData("jovmitId"))
-    replacePostCatalogWith(InMemoryPostCatalog(clock = ControllableClock(timestampWithTimezoneOffset)))
+    replacePostCatalogWith(InMemoryPostCatalog(clock = ControllableClock(timestamp)))
 
     launchPostComposerFor("jovmit@fiends.com", createNewPostRule) {
       typePost("My First Post")
@@ -52,22 +50,61 @@ class CreateNewPostScreenTest {
     }
   }
 
+  @Test
+  fun showsBlockingLoading() {
+    replacePostCatalogWith(DelayingPostsCatalog())
+
+    launchPostComposerFor("bob@friends.com", createNewPostRule) {
+      typePost("Waiting")
+      submit()
+    } verify {
+      blockingLoadingIsShown()
+    }
+  }
+
+  @Test
+  fun showsBackendError() {
+    replacePostCatalogWith(UnavailablePostCatalog())
+
+    launchPostComposerFor("dan@friends.com", createNewPostRule) {
+      typePost("Some Post")
+      submit()
+    } verify {
+      backendErrorIsShown()
+    }
+  }
+
+  @Test
+  fun showsOfflineError() {
+    replacePostCatalogWith(OfflinePostCatalog())
+
+    launchPostComposerFor("mia@friends.com", createNewPostRule) {
+      typePost("My New Post")
+      submit()
+    } verify {
+      offlineErrorIsShown()
+    }
+  }
+
+  private val defaultPostCatalog : PostCatalog = GlobalContext.get().get()
+  private val defaultDataStore : UserDataStore = GlobalContext.get().get()
+
   @After
   fun tearDown() {
-    replacePostCatalogWith(InMemoryPostCatalog())
-    replaceUserDataWith(InMemoryUserData(""))
+    replacePostCatalogWith(defaultPostCatalog)
+    replaceUserDataWith(defaultDataStore)
   }
 
   private fun replacePostCatalogWith(postCatalog: PostCatalog) {
     val module = module {
-      single(override = true) { postCatalog }
+      single { postCatalog }
     }
     loadKoinModules(module)
   }
 
-  private fun replaceUserDataWith(userData: InMemoryUserData) {
+  private fun replaceUserDataWith(userDataStore: UserDataStore) {
     val module = module {
-      single(override = true) { userData }
+      single { userDataStore }
     }
     loadKoinModules(module)
   }

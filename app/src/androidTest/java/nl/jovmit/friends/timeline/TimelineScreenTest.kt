@@ -1,12 +1,11 @@
 package nl.jovmit.friends.timeline
 
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import kotlinx.coroutines.delay
 import nl.jovmit.friends.MainActivity
 import nl.jovmit.friends.domain.post.*
-import org.junit.After
-import org.junit.Rule
-import org.junit.Test
+import nl.jovmit.friends.domain.user.InMemoryUserCatalog
+import nl.jovmit.friends.domain.user.UserCatalog
+import org.junit.*
 import org.koin.core.context.GlobalContext
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
@@ -16,7 +15,8 @@ class TimelineScreenTest {
   @get:Rule
   val timelineTestRule = createAndroidComposeRule<MainActivity>()
 
-  val defaultPostCatalog : PostCatalog = GlobalContext.get().get()
+  val defaultPostCatalog: PostCatalog = GlobalContext.get().get()
+  val defaultUserCatalog: UserCatalog = GlobalContext.get().get()
 
   @Test
   fun showsEmptyTimelineMessage() {
@@ -83,26 +83,29 @@ class TimelineScreenTest {
     }
   }
 
+  @Before
+  fun before() {
+    replaceUserCatalogWith(InMemoryUserCatalog())
+  }
+
   @After
   fun tearDown() {
     replacePostCatalogWith(defaultPostCatalog)
+    replaceUserCatalogWith(defaultUserCatalog)
   }
+
 
   private fun replacePostCatalogWith(postsCatalog: PostCatalog) {
     val replaceModule = module {
-      factory(override = true) { postsCatalog }
+      factory { postsCatalog }
     }
     loadKoinModules(replaceModule)
   }
 
-  class DelayingPostsCatalog : PostCatalog {
-    override suspend fun addPost(userId: String, postText: String): Post {
-      TODO("Not yet implemented")
+  private fun replaceUserCatalogWith(userCatalog: UserCatalog) {
+    val replaceModule = module {
+      factory { userCatalog }
     }
-
-    override suspend fun postsFor(userIds: List<String>): List<Post> {
-      delay(2000)
-      return emptyList()
-    }
+    loadKoinModules(replaceModule)
   }
 }

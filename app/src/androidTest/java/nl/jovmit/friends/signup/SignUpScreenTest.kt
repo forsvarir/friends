@@ -5,10 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import nl.jovmit.friends.MainActivity
 import nl.jovmit.friends.domain.user.*
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import org.junit.*
 import org.koin.core.context.GlobalContext.get
 import org.koin.core.context.loadKoinModules
 import org.koin.dsl.module
@@ -19,7 +16,7 @@ class SignUpScreenTest {
   val signUpTestRule = createAndroidComposeRule<MainActivity>()
 
   private val signUpModule = module {
-    factory<UserCatalog>(override = true) { InMemoryUserCatalog() }
+    factory<UserCatalog> { InMemoryUserCatalog() }
   }
 
   val defaultUserCatalog : UserCatalog = get().get()
@@ -146,7 +143,7 @@ class SignUpScreenTest {
 
   private fun replaceUserCatalogWith(userCatalog: UserCatalog) {
     val replaceModule = module {
-      factory(override = true) { userCatalog }
+      factory { userCatalog }
     }
     loadKoinModules(replaceModule)
   }

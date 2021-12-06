@@ -64,4 +64,22 @@ class CreateNewPostVerificationRobot(
     rule.onAllNodesWithText(dateTime).onLast().assertIsDisplayed()
     rule.onNodeWithText(postContent).assertIsDisplayed()
   }
+
+  fun blockingLoadingIsShown() {
+    val loading = rule.activity.getString(R.string.loading)
+    rule.onNodeWithTag(loading)
+      .assertIsDisplayed()
+  }
+
+  fun backendErrorIsShown() {
+    val errorMessage = rule.activity.getString(R.string.creatingPostError)
+    rule.onNodeWithText(errorMessage)
+      .assertIsDisplayed()
+  }
+
+  fun offlineErrorIsShown() {
+    val offlineMessage = rule.activity.getString(R.string.offlineError)
+    rule.onNodeWithText(offlineMessage)
+      .assertIsDisplayed()
+  }
 }
