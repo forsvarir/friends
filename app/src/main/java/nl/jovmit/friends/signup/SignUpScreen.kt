@@ -17,18 +17,25 @@ import nl.jovmit.friends.signup.state.SignUpState
 import nl.jovmit.friends.ui.composables.BlockingLoading
 import nl.jovmit.friends.ui.composables.InfoMessage
 import nl.jovmit.friends.ui.composables.ScreenTitle
+import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun SignUpScreen(
-  signUpViewModel: SignUpViewModel,
   onSignedUp: (String) -> Unit
 ) {
+
+  val signUpViewModel = getViewModel<SignUpViewModel>()
   val screenState by remember { mutableStateOf(SignUpScreenState()) }
   val signUpState by signUpViewModel.signUpState.observeAsState()
+  if (screenState.didUserSignUp()) { return }
 
   when (signUpState) {
     is SignUpState.Loading -> screenState.toggleLoading()
-    is SignUpState.SignedUp -> onSignedUp((signUpState as SignUpState.SignedUp).user.id)
+    is SignUpState.SignedUp -> {
+      val signedUpUserId = (signUpState as SignUpState.SignedUp).user.id
+      screenState.setSignedUpUser(signedUpUserId)
+      onSignedUp(signedUpUserId)
+    }
     is SignUpState.BadEmail -> screenState.showBadEmail()
     is SignUpState.BadPassword -> screenState.showBadPassword()
     is SignUpState.DuplicateAccount -> screenState.toggleInfoMessage(R.string.duplicateAccountError)

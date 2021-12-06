@@ -15,59 +15,65 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import nl.jovmit.friends.R
+import nl.jovmit.friends.postcomposer.state.CreateNewPostScreenState
 import nl.jovmit.friends.postcomposer.state.CreatePostState
+import nl.jovmit.friends.ui.composables.BlockingLoading
+import nl.jovmit.friends.ui.composables.InfoMessage
 import nl.jovmit.friends.ui.composables.ScreenTitle
-
-class CreateNewPostScreenState {
-  var isPostSubmitted by mutableStateOf(false)
-
-  fun setPostSubmitted() {
-    isPostSubmitted = true
-  }
-}
+import org.koin.androidx.compose.getViewModel
 
 @Composable
 fun CreateNewPostScreen(
-  createPostViewModel: CreatePostViewModel,
   onPostCreated: () -> Unit
 ) {
 
+  val createPostViewModel = getViewModel<CreatePostViewModel>()
   val screenState by remember { mutableStateOf(CreateNewPostScreenState()) }
   var postText by remember { mutableStateOf("") }
-
   val createPostState by createPostViewModel.postState.observeAsState()
+
   when (createPostState) {
+    is CreatePostState.Loading ->
+      screenState.showLoading()
     is CreatePostState.Created -> {
       if (screenState.isPostSubmitted) {
         onPostCreated()
       }
     }
+    is CreatePostState.BackendError ->
+      screenState.showMessage(R.string.creatingPostError)
+    is CreatePostState.Offline ->
+      screenState.showMessage(R.string.offlineError)
   }
 
-  Column(
-    modifier = Modifier
-      .fillMaxSize()
-      .padding(16.dp)
-  ) {
-    ScreenTitle(resource = R.string.createNewPost)
-    Spacer(modifier = Modifier.height(16.dp))
-    Box(modifier = Modifier.fillMaxSize()) {
-      PostComposer(postText) { postText = it }
-      FloatingActionButton(
-        onClick = {
-          screenState.setPostSubmitted()
-          createPostViewModel.createPost(postText)
-        },
-        modifier = Modifier
-          .align(Alignment.BottomEnd)
-          .testTag(stringResource(id = R.string.submitPost))
-      ) {
-        Icon(
-          imageVector = Icons.Default.Done,
-          contentDescription = stringResource(id = R.string.submitPost)
-        )
+  Box {
+    Column(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(16.dp)
+    ) {
+      ScreenTitle(resource = R.string.createNewPost)
+      Spacer(modifier = Modifier.height(16.dp))
+      Box(modifier = Modifier.fillMaxSize()) {
+        PostComposer(postText) { postText = it }
+        FloatingActionButton(
+          onClick = {
+            screenState.setPostSubmitted()
+            createPostViewModel.createPost(postText)
+          },
+          modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .testTag(stringResource(id = R.string.submitPost))
+        ) {
+          Icon(
+            imageVector = Icons.Default.Done,
+            contentDescription = stringResource(id = R.string.submitPost)
+          )
+        }
       }
     }
+    InfoMessage(stringResource = screenState.currentMessage)
+    BlockingLoading(isShowing = screenState.isLoading)
   }
 }
 

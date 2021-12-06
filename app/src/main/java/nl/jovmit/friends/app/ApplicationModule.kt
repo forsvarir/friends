@@ -4,10 +4,7 @@ import nl.jovmit.friends.domain.post.InMemoryPostCatalog
 import nl.jovmit.friends.domain.post.PostCatalog
 import nl.jovmit.friends.domain.post.PostRepository
 import nl.jovmit.friends.domain.timeline.TimelineRepository
-import nl.jovmit.friends.domain.user.InMemoryUserCatalog
-import nl.jovmit.friends.domain.user.InMemoryUserData
-import nl.jovmit.friends.domain.user.UserCatalog
-import nl.jovmit.friends.domain.user.UserRepository
+import nl.jovmit.friends.domain.user.*
 import nl.jovmit.friends.domain.validation.RegexCredentialsValidator
 import nl.jovmit.friends.postcomposer.CreatePostViewModel
 import nl.jovmit.friends.signup.SignUpViewModel
@@ -19,11 +16,11 @@ val applicationModule = module {
   single<CoroutineDispatchers> { DefaultDispatchers() }
   single<UserCatalog> { InMemoryUserCatalog() }
   single<PostCatalog> { InMemoryPostCatalog() }
-  single { InMemoryUserData("") }
+  single<UserDataStore> { InMemoryUserDataStore() }
   factory { RegexCredentialsValidator() }
-  factory { UserRepository(userCatalog = get()) }
+  factory { UserRepository(userCatalog = get(), userDataStore = get()) }
   factory { TimelineRepository(userCatalog = get(), postCatalog = get()) }
-  factory { PostRepository(userData = get(), postCatalog = get()) }
+  factory { PostRepository(userDataStore = get(), postCatalog = get()) }
 
   viewModel {
     SignUpViewModel(
